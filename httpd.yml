@@ -1,6 +1,6 @@
 ---
 - name: This sets up an httpd webserver
-  hosts: stapp02
+  hosts: all
   become: true
   become_user: root
   tasks:
