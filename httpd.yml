@@ -1,0 +1,46 @@
+---
+- name: This sets up an httpd webserver
+  hosts: stapp02
+  become: true
+  become_user: root
+  tasks:
+  - name: Install apache packages 
+    yum:
+      name: httpd
+      state: latest
+  - name: install php
+    yum:
+      name: php
+      state: latest
+  - name: change default document root for apache
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^DocumentRoot'
+      insertafter: '^#DocumentRoot'
+      line: 'DocumentRoot "/var/www/html/myroot"'
+  - name: root dir check_mode
+    stat:
+      path: /var/www/html/myroot
+    register: isCreated
+  - name: make root dir
+    file:
+      path: /var/www/html/myroot
+      state: directory
+      mode: 0755
+      group: apache
+      owner: apache
+    when: isCreated.stat.exists == false
+  - name: Copy Template a file
+    template:
+      src: "/home/thor/playbooks/templates/phpinfo.php.j2"
+      dest: "/var/www/html/myroot/phpinfo.php"
+      owner: apache
+      group: apache
+  - name: ensure httpd is running
+    service:
+      name: httpd 
+      state: restarted
+  - name: apache enable
+    service:
+      name: httpd
+      enabled: yes
